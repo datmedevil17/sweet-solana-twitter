@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { likePost, createComment,unlikePost } from '@/services/blockchain'
+import { likePost, unlikePost, getProvider } from '@/services/blockchain'
+import { useWallet } from '@solana/wallet-adapter-react'
+import Comments from './Comments'
 
 interface Post {
   id: string
@@ -12,7 +14,7 @@ interface Post {
   author: string
   imageUrl?: string
   commentsCount: number
-  isLiked?: boolean // Add this to track if current user liked the post
+  isLiked?: boolean
 }
 
 interface PostCardProps {
@@ -29,37 +31,36 @@ const PostCard: React.FC<PostCardProps> = ({
   showActions = true 
 }) => {
   const [isLiking, setIsLiking] = useState(false)
-  const [isCommenting, setIsCommenting] = useState(false)
   const [showCommentInput, setShowCommentInput] = useState(false)
-  const [commentText, setCommentText] = useState('')
   const [localLikes, setLocalLikes] = useState(post.likes)
   const [localCommentsCount, setLocalCommentsCount] = useState(post.commentsCount)
   const [isLiked, setIsLiked] = useState(post.isLiked || false)
+  const { publicKey, signTransaction, sendTransaction } = useWallet()
+  const program = useMemo(
+    () => getProvider(publicKey, signTransaction, sendTransaction),
+    [publicKey, signTransaction, sendTransaction]
+  )
 
   const handleLike = async () => {
-    if (isLiking) return
+    if (isLiking || !publicKey) return
     
     setIsLiking(true)
     try {
-      // Convert string ID to number for the smart contract
       const postId = parseInt(post.id)
       
       if (isLiked) {
-        // Unlike the post (you'll need to implement unlikePost in blockchain service)
-        // await unlikePost(postId)
+        await unlikePost(program!, publicKey, postId)
         setLocalLikes(prev => prev - 1)
         setIsLiked(false)
       } else {
-        // Like the post
-        await likePost(postId)
+        await likePost(program!, publicKey, postId)
         setLocalLikes(prev => prev + 1)
         setIsLiked(true)
       }
       
-      // Call parent callback if provided
       onLike?.(post.id)
     } catch (error) {
-      console.error('Error liking post:', error)
+      console.error('Error liking/unliking post:', error)
       // Revert optimistic update on error
       if (isLiked) {
         setLocalLikes(prev => prev + 1)
@@ -78,23 +79,8 @@ const PostCard: React.FC<PostCardProps> = ({
     onComment?.(post.id)
   }
 
-  const handleSubmitComment = async () => {
-    if (!commentText.trim() || isCommenting) return
-    
-    setIsCommenting(true)
-    try {
-      // Convert string ID to number for the smart contract
-      const postId = parseInt(post.id)
-      
-      await createComment(postId, commentText.trim())
-      setLocalCommentsCount(prev => prev + 1)
-      setCommentText('')
-      setShowCommentInput(false)
-    } catch (error) {
-      console.error('Error creating comment:', error)
-    } finally {
-      setIsCommenting(false)
-    }
+  const handleCommentAdded = () => {
+    setLocalCommentsCount(prev => prev + 1)
   }
 
   return (
@@ -170,43 +156,14 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
       </div>
 
-      {/* Comment Input */}
+      {/* Comments Component */}
       {showCommentInput && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex space-x-3">
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write a comment..."
-              className="flex-1 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={3}
-              maxLength={140} // Based on MAX_COMMENT_LENGTH from your smart contract
-            />
-          </div>
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-gray-500">
-              {commentText.length}/140 characters
-            </span>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  setShowCommentInput(false)
-                  setCommentText('')
-                }}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmitComment}
-                disabled={!commentText.trim() || isCommenting}
-                className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isCommenting ? 'Posting...' : 'Post Comment'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <Comments 
+          postId={post.id}
+          program={program}
+          onCommentAdded={handleCommentAdded}
+          initialCommentsCount={post.commentsCount}
+        />
       )}
     </div>
   )
