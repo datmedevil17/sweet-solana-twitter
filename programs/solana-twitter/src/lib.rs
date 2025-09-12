@@ -9,7 +9,7 @@ pub mod states;
 
 use instructions::*;
 
-declare_id!("5KHS8ooUAF2bYEKZTmj8jKRZmea3gXed5FPyVtQKn2bu");
+declare_id!("72bRGCehS6GpgRDoUpEtdtw2PV5nJhiEZ2SiuzUwR3Cz");
 
 #[program]
 pub mod twitter_platform {
