@@ -3,21 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { createComment, fetchPostComments } from '@/services/blockchain'
 import { useWallet } from '@solana/wallet-adapter-react'
-
-interface Comment {
-  id: string
-  content: string
-  author: string
-  timestamp: number
-  postId: string
-}
-
-interface CommentsProps {
-  postId: string
-  program: any
-  onCommentAdded?: () => void
-  initialCommentsCount?: number
-}
+import { Comment, CommentsProps } from '@/utils/interfaces'
 
 const Comments: React.FC<CommentsProps> = ({ 
   postId, 
@@ -38,7 +24,8 @@ const Comments: React.FC<CommentsProps> = ({
     setIsLoadingComments(true)
     try {
       const postIdNum = parseInt(postId)
-      const fetchedComments = await fetchPostComments(program, postIdNum)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fetchedComments = await fetchPostComments(program as any, postIdNum)
       const transformedComments: Comment[] = fetchedComments.map((commentAccount) => ({
         id: commentAccount.account.commentId.toString(),
         content: commentAccount.account.content,
@@ -58,15 +45,17 @@ const Comments: React.FC<CommentsProps> = ({
     if (showComments && program) {
       loadComments()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showComments, program, postId])
 
   const handleSubmitComment = async () => {
-    if (!commentText.trim() || isCommenting || !publicKey) return
+    if (!commentText.trim() || isCommenting || !publicKey || !program) return
     
     setIsCommenting(true)
     try {
       const postIdNum = parseInt(postId)
-      await createComment(program, publicKey, postIdNum, commentText.trim())
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await createComment(program as any, publicKey, postIdNum, commentText.trim())
       
       // Add the new comment optimistically
       const newComment: Comment = {

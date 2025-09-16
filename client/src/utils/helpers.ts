@@ -8,7 +8,7 @@ export function truncateAddress(address: string): string {
 }
 
 export const getClusterURL = (cluster: string): string => {
-  const clusterUrls: any = {
+  const clusterUrls: Record<string, string> = {
     'mainnet-beta': 'https://api.mainnet-beta.solana.com',
     'testnet': 'https://api.testnet.solana.com',
     'devnet': 'https://api.devnet.solana.com',

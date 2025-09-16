@@ -45,18 +45,20 @@ export default function InitializeProgram({ isOpen, onClose }: InitializeProgram
       
       onClose()
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error initializing program:', error)
       
       // Handle specific error messages
-      if (error?.message?.includes('already initialized')) {
-        toast.error('Program is already initialized')
-      } else if (error?.message?.includes('insufficient funds')) {
-        toast.error('Insufficient funds to initialize program')
-      } else if (error?.message?.includes('unauthorized')) {
-        toast.error('Unauthorized: Only the deployer can initialize the program')
-      } else {
-        toast.error('Failed to initialize program 😞')
+      if (error instanceof Error) {
+        if (error.message.includes('already initialized')) {
+          toast.error('Program is already initialized')
+        } else if (error.message.includes('insufficient funds')) {
+          toast.error('Insufficient funds to initialize program')
+        } else if (error.message.includes('unauthorized')) {
+          toast.error('Unauthorized: Only the deployer can initialize the program')
+        } else {
+          toast.error('Failed to initialize program 😞')
+        }
       }
     } finally {
       setIsLoading(false)

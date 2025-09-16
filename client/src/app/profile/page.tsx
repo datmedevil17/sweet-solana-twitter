@@ -132,6 +132,7 @@ const ProfilePage = () => {
 
   useEffect(() => {
     loadProfileData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const tabs = [

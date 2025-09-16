@@ -4,37 +4,50 @@ import { fetchAllPosts, fetchAllUserProfiles, getProviderReadonly } from '@/serv
 import PostCard from '@/components/PostCard'
 import ProfileCard from '@/components/ProfileCard'
 import Link from 'next/link'
+import { Post, ProfileCardUser } from '@/utils/interfaces'
 
-interface Post {
-  id: string;
-  publicKey: string;
-  content: string;
-  timestamp: number;
-  likes: number;
-  comments: number;
-  author: string;
-  commentsCount: number;
-  imageUrl?: string; // Add imageUrl field
+interface RawPostData {
+  publicKey: {
+    toString(): string
+  }
   account: {
-    topic: string;
-    content: string;
-    user: string;
-    timestamp: number;
-  };
+    postId: {
+      toString(): string
+    }
+    content: string
+    createdAt: {
+      toNumber(): number
+    }
+    likesCount: {
+      toNumber(): number
+    }
+    commentsCount: {
+      toNumber(): number
+    }
+    author: {
+      toString(): string
+    }
+    imageUrl: string | null
+  }
 }
 
-interface UserProfile {
-  publicKey: string;
+interface RawProfileData {
+  publicKey: {
+    toString(): string
+  }
   account: {
-    user: string;
-    name: string;
-    avatar: string;
-  };
+    owner?: {
+      toString(): string
+    }
+    displayName?: string
+    username?: string
+    profileImageUrl?: string
+  }
 }
 
-const page = () => {
+const FeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([])
-  const [profiles, setProfiles] = useState<UserProfile[]>([])
+  const [profiles, setProfiles] = useState<ProfileCardUser[]>([])
   const [loading, setLoading] = useState(true)
 
     const program = useMemo(() => getProviderReadonly(), [])
@@ -44,16 +57,16 @@ const page = () => {
     const loadData = async () => {
       try {
         const postsData = await fetchAllPosts(program)
-        setPosts(postsData.map((post: any) => ({
-          id: post.account.postId?.toString() || post.publicKey.toString(),
+        setPosts(postsData.map((post: RawPostData) => ({
+          id: post.account.postId.toString(),
           publicKey: post.publicKey.toString(),
           content: post.account.content,
           timestamp: post.account.createdAt.toNumber(),
-          likes: post.account.likesCount?.toNumber() || 0, // Use actual likes count
-          comments: post.account.commentsCount?.toNumber() || 0, // Use actual comments count
+          likes: post.account.likesCount.toNumber(),
+          comments: post.account.commentsCount.toNumber(),
           author: post.account.author.toString(),
-          commentsCount: post.account.commentsCount?.toNumber() || 0, // Use actual comments count
-          imageUrl: post.account.imageUrl || undefined, // Add image URL support
+          commentsCount: post.account.commentsCount.toNumber(),
+          imageUrl: post.account.imageUrl || undefined,
           account: {
             topic: post.account.content,
             content: post.account.content,
@@ -63,7 +76,7 @@ const page = () => {
         })))
 
         const profilesData = await fetchAllUserProfiles(program)
-        setProfiles(profilesData.map((profile) => ({
+        setProfiles(profilesData.map((profile: RawProfileData) => ({
           publicKey: profile.publicKey.toString(),
           account: {
             user: profile.account.owner?.toString() || '',
@@ -99,7 +112,7 @@ const page = () => {
           <h2 className="text-2xl font-semibold mb-4">Recent Posts</h2>
           <div className="space-y-4">
             {posts.map((post) => (
-                <div className="cursor-pointer hover:shadow-lg transition-shadow">
+                <div className="cursor-pointer hover:shadow-lg transition-shadow" key={post.id}>
                   <PostCard post={post} />
                 </div>
             ))}
@@ -134,4 +147,4 @@ const page = () => {
   )
 }
 
-export default page
+export default FeedPage

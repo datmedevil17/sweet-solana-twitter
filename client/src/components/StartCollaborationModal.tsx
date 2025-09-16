@@ -53,7 +53,7 @@ export default function StartCollaborationModal({ isOpen, onClose }: StartCollab
       let collaboratorPubkey: PublicKey
       try {
         collaboratorPubkey = new PublicKey(collaboratorAddress.trim())
-      } catch (error) {
+      } catch {
         toast.error('Invalid collaborator address')
         setIsLoading(false)
         return

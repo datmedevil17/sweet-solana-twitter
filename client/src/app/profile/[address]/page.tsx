@@ -10,31 +10,8 @@ import { fetchUserFollowers, fetchUserPosts, fetchUserProfile, fetchUserFollows,
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { useParams } from 'next/navigation'
-
-interface UserProfile {
-  username: string
-  bio: string
-  avatar: string
-  followersCount: number
-  followingCount: number
-  postsCount: number
-}
-
-interface Post {
-  id: string
-  content: string
-  timestamp: number
-  likes: number
-  author: string
-  imageUrl?: string
-  commentsCount: number
-}
-
-interface User {
-  username: string
-  avatar: string
-  address: string
-}
+import { UserProfile, Post, User } from '@/utils/interfaces'
+import Image from 'next/image'
 
 const ProfilePage = () => {
   const params = useParams()
@@ -186,6 +163,7 @@ const ProfilePage = () => {
     if (profileAddress && program) {
       loadProfileData()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileAddress, publicKey, program])
 
   const tabs = [
@@ -259,7 +237,13 @@ const ProfilePage = () => {
             <div className="flex items-start space-x-6">
               <div className="w-24 h-24 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
                 {userProfile.avatar ? (
-                  <img src={userProfile.avatar} alt="Profile" className="w-full h-full object-cover" />
+                  <Image 
+                    src={userProfile.avatar} 
+                    alt="Profile" 
+                    width={96} 
+                    height={96} 
+                    className="w-full h-full object-cover" 
+                  />
                 ) : (
                   userProfile.username?.charAt(0).toUpperCase() || 'U'
                 )}

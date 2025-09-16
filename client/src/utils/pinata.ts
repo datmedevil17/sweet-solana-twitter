@@ -46,7 +46,7 @@ export const uploadToIpfs = async (file: File): Promise<string> => {
   }
 };
 
-export const uploadToIpfsJson = async (jsonData: Record<string, any>): Promise<string> => {
+export const uploadToIpfsJson = async (jsonData: Record<string, unknown>): Promise<string> => {
   if (!jsonData) {
     throw new Error("No JSON data provided");
   }
@@ -73,7 +73,7 @@ export const uploadToIpfsJson = async (jsonData: Record<string, any>): Promise<s
   }
 };
 
-export const getJsonFromIpfs = async <T = any>(ipfsHash: string): Promise<T> => {
+export const getJsonFromIpfs = async <T = unknown>(ipfsHash: string): Promise<T> => {
   if (!ipfsHash) {
     throw new Error("No IPFS hash provided");
   }
@@ -99,6 +99,10 @@ export const validatePinataConfig = (): boolean => {
 };
 
 // Type guard for checking if error is from Pinata
-export const isPinataError = (error: any): error is PinataError => {
-  return error && error.error && typeof error.error.reason === 'string';
+export const isPinataError = (error: unknown): error is PinataError => {
+  return !!(error && 
+    typeof error === 'object' && 
+    'error' in error && 
+    typeof (error as PinataError).error === 'object' && 
+    typeof (error as PinataError).error.reason === 'string');
 };

@@ -134,16 +134,18 @@ export default function CreateProfile({ isOpen, onClose }: CreateProfileProps) {
       setPreviewImage(null)
       onClose()
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating profile:', error)
       
       // Handle specific error messages
-      if (error?.message?.includes('already exists')) {
-        toast.error('Username already exists. Please choose a different one.')
-      } else if (error?.message?.includes('insufficient funds')) {
-        toast.error('Insufficient funds to create profile')
-      } else {
-        toast.error('Failed to create profile 😞')
+      if (error instanceof Error) {
+        if (error.message.includes('already exists')) {
+          toast.error('Username already exists. Please choose a different one.')
+        } else if (error.message.includes('insufficient funds')) {
+          toast.error('Insufficient funds to create profile')
+        } else {
+          toast.error('Failed to create profile 😞')
+        }
       }
     } finally {
       setIsLoading(false)
