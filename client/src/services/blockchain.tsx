@@ -5,8 +5,8 @@ import {
   SystemProgram,
   TransactionSignature,
 } from "@solana/web3.js";
-import { TwitterPlatform } from "../../../target/types/twitter_platform";
-import idl from "../../../target/idl/twitter_platform.json";
+import { TwitterPlatform } from "./twitter_platform";
+import idl from "./twitter_platform.json";
 import { getClusterURL } from "@/utils/helpers";
 
 const CLUSTER: string = process.env.NEXT_PUBLIC_CLUSTER || "localhost";
