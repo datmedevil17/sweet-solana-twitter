@@ -46,7 +46,6 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            {program && publicKey && (
               <nav className="hidden md:flex items-center space-x-8">
                 <Link
                   href="/feed"
@@ -94,7 +93,7 @@ export default function Header() {
                   )}
                 </div>
               </nav>
-            )}
+            
 
             {/* Desktop Wallet Button */}
             <div className="hidden md:flex items-center">
