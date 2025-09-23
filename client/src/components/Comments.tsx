@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createComment, fetchPostComments } from '@/services/blockchain'
+import { createComment, fetchPostComments, deleteComment } from '@/services/blockchain'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Comment, CommentsProps } from '@/utils/interfaces'
 

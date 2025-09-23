@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { likePost, unlikePost, getProvider } from '@/services/blockchain'
+import { likePost, unlikePost, getProvider,deletePost,checkIfLiked } from '@/services/blockchain'
 import { useWallet } from '@solana/wallet-adapter-react'
 import Comments from './Comments'
 

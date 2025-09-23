@@ -29,14 +29,16 @@ const ProfilePage = () => {
   const [followLoading, setFollowLoading] = useState(false)
 
   const { publicKey, signTransaction, sendTransaction } = useWallet()
-  console.log(publicKey?.toBase58())
+  console.log('Current publicKey:', publicKey?.toBase58())
+  console.log('Profile address:', profileAddress)
   const program = useMemo(() => getProviderReadonly(), [])
   const walletProgram = useMemo(
     () => getProvider(publicKey, signTransaction, sendTransaction),
     [publicKey, signTransaction, sendTransaction]
   )
 
-  const isOwnProfile = publicKey?.toString() === profileAddress
+  const isOwnProfile = publicKey?.toBase58() === profileAddress
+  console.log('Is own profile:', isOwnProfile)
 
   const handleClose = () => {
     setIsOpen(false)
@@ -216,20 +218,22 @@ const ProfilePage = () => {
                 >
                   Edit Profile
                 </button>
+              ) : publicKey ? (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`px-4 py-2 font-bold rounded-lg shadow-md transition-colors ${
+                    isFollowing
+                      ? 'bg-gray-500 hover:bg-gray-700 text-white'
+                      : 'bg-blue-500 hover:bg-blue-700 text-white'
+                  } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
+                </button>
               ) : (
-                publicKey && (
-                  <button
-                    onClick={handleFollowToggle}
-                    disabled={followLoading}
-                    className={`px-4 py-2 font-bold rounded-lg shadow-md transition-colors ${
-                      isFollowing
-                        ? 'bg-gray-500 hover:bg-gray-700 text-white'
-                        : 'bg-blue-500 hover:bg-blue-700 text-white'
-                    } ${followLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {followLoading ? 'Loading...' : (isFollowing ? 'Unfollow' : 'Follow')}
-                  </button>
-                )
+                <div className="text-gray-500 text-sm">
+                  Connect wallet to follow
+                </div>
               )}
             </div>
 
