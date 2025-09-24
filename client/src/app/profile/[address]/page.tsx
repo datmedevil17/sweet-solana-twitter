@@ -123,7 +123,7 @@ const ProfilePage = () => {
           fetchUserFollows(program!, targetPublicKey)
         ])
         
-        let updatedPosts = [];
+        const updatedPosts = [];
         for (const post of postsData) {
           const isLiked = publicKey ? await checkIfLiked(program!, publicKey, Number(post.account.postId)) : false
           updatedPosts.push({
