@@ -23,6 +23,7 @@ export interface Post {
     user: string
     timestamp: number
   }
+  isLiked?: boolean
 }
 
 export interface User {

@@ -53,7 +53,7 @@ A fully decentralized Twitter-like social media platform built on the Solana blo
 ### **Backend/Blockchain**
 - **Blockchain**: Solana
 - **Smart Contract Language**: Rust (Anchor Framework)
-- **RPC Provider**: Solana RPC endpoints
+- **RPC Provider**: Solana RPC endpoints with Shyft fallback
 - **Storage**: IPFS via Pinata for media files
 
 ### **Development Tools**
@@ -97,24 +97,124 @@ sh -c "$(curl -sSfL https://release.solana.com/v1.16.0/install)"
 npm install -g @coral-xyz/anchor-cli
 ```
 
-4. **Build the Solana program**
-```bash
-cd programs/solana-twitter
-anchor build
-```
-
-5. **Set up environment variables**
+4. **Set up environment variables**
 ```bash
 cd client
 cp .env.example .env.local
 ```
 
-Edit `.env.local` with your configuration:
-```env
+## 🔐 Environment Configuration
+
+### **Required Environment Variables**
+
+Create a `.env.local` file in the `client` directory with the following variables:
+
+```bash
+# ==========================================
+# SOLANA BLOCKCHAIN CONFIGURATION
+# ==========================================
+
+# Network to connect to (devnet recommended for development)
+NEXT_PUBLIC_CLUSTER=devnet
+
+# Main RPC URL (fallback if no custom RPC specified)
+NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
+
+# ==========================================
+# IPFS STORAGE CONFIGURATION (REQUIRED)
+# ==========================================
+# Get these from https://pinata.cloud/
+# Required for profile pictures and post images
+
+PINATA_API_KEY=your_pinata_api_key_here
+PINATA_SECRET_API_KEY=your_pinata_secret_api_key_here
+```
+
+### **Optional Environment Variables (Performance Enhancement)**
+
+```bash
+# ==========================================
+# OPTIONAL: ENHANCED RPC PROVIDERS
+# ==========================================
+
+# Shyft API Key for enhanced devnet performance
+# Get from https://shyft.to/ (free tier available)
+# If not provided, falls back to default Solana devnet RPC
+NEXT_PUBLIC_SHYFT_API_KEY=your_shyft_api_key_here
+
+# Custom RPC URLs (override defaults)
+NEXT_PUBLIC_MAINNET_RPC_URL=https://your-custom-mainnet-rpc.com
+
+#Use Shyft Solana Rpc Provider to get your api key. Follow the link : https://dashboard.helius.dev/
+NEXT_PUBLIC_DEVNET_RPC_URL=https://your-custom-devnet-rpc.com
+
+# ==========================================
+# DEVELOPMENT SETTINGS
+# ==========================================
+
+# Set to 'localhost' for local Solana test validator
+# NEXT_PUBLIC_CLUSTER=localhost
+# NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8899
+```
+
+### **🔑 Getting API Keys**
+
+#### **1. Pinata IPFS Storage (Required)**
+1. Visit [Pinata Cloud](https://pinata.cloud/)
+2. Create a free account
+3. Go to API Keys section
+4. Generate new API key
+5. Copy `API Key` and `API Secret` to your `.env.local`
+
+**Free tier includes:**
+- 1 GB storage
+- Sufficient for development and testing
+
+#### **2. Shyft RPC (Optional - Performance Enhancement)**
+1. Visit [Shyft](https://shyft.to/)
+2. Sign up for free account
+3. Get your API key from dashboard
+4. Add to `NEXT_PUBLIC_SHYFT_API_KEY` in `.env.local`
+
+**Benefits:**
+- Enhanced devnet performance
+- Better reliability
+- Free tier: 100 requests/second
+
+### **🏗️ Network Configuration**
+
+#### **Development (Recommended)**
+```bash
 NEXT_PUBLIC_CLUSTER=devnet
 NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
-PINATA_API_KEY=your_pinata_api_key
-PINATA_SECRET_API_KEY=your_pinata_secret_key
+```
+
+#### **Local Development with Test Validator**
+```bash
+NEXT_PUBLIC_CLUSTER=localhost
+NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8899
+
+# Start local test validator in another terminal
+solana-test-validator
+```
+
+#### **Production**
+```bash
+NEXT_PUBLIC_CLUSTER=mainnet-beta
+NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
+```
+
+### **⚠️ Security Notes**
+
+- **Never commit `.env.local`** to version control
+- **Use different API keys** for development and production
+- **Rotate API keys regularly** for production deployments
+- **Keep your `.env.example`** file updated for contributors
+
+5. **Build the Solana program**
+```bash
+cd programs/solana-twitter
+anchor build
 ```
 
 6. **Deploy the program (optional for development)**
@@ -130,11 +230,97 @@ npm run dev
 
 Visit `http://localhost:3000` to see the application.
 
+## 🧪 Testing Your Setup
+
+### **1. Check RPC Connection**
+```bash
+# Test devnet connection
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1, "method":"getHealth"}' \
+  https://api.devnet.solana.com
+```
+
+### **2. Verify Environment Variables**
+```bash
+# Check if all required vars are set
+node -e "
+const fs = require('fs');
+const path = '.env.local';
+if (fs.existsSync(path)) {
+  const content = fs.readFileSync(path, 'utf8');
+  console.log('✅ .env.local found');
+  console.log('Required vars present:');
+  console.log('PINATA_API_KEY:', content.includes('PINATA_API_KEY'));
+  console.log('PINATA_SECRET_API_KEY:', content.includes('PINATA_SECRET_API_KEY'));
+  console.log('NEXT_PUBLIC_CLUSTER:', content.includes('NEXT_PUBLIC_CLUSTER'));
+} else {
+  console.log('❌ .env.local not found');
+}
+"
+```
+
+### **3. Test Application**
+```bash
+npm run dev
+```
+- Open http://localhost:3000
+- Try connecting a wallet
+- Verify network shows as "devnet" in wallet
+
+## 🌍 Environment Troubleshooting
+
+### **Common Issues**
+
+#### **RPC Connection Issues**
+```bash
+# Error: "Failed to connect to RPC"
+# Solution: Check network connectivity and RPC URL
+
+# Test RPC endpoint
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' \
+  YOUR_RPC_URL
+```
+
+#### **IPFS Upload Issues**
+```bash
+# Error: "Failed to upload to IPFS"
+# Solution: Verify Pinata API keys
+
+# Test Pinata connection
+curl -X GET \
+  -H "pinata_api_key: YOUR_API_KEY" \
+  -H "pinata_secret_api_key: YOUR_SECRET_KEY" \
+  https://api.pinata.cloud/data/testAuthentication
+```
+
+#### **Wallet Connection Issues**
+- Ensure you're on the correct network (devnet/mainnet)
+- Clear browser cache and wallet data
+- Try different wallet (Phantom, Solflare, etc.)
+
+### **Environment Variable Validation**
+
+Add this to your component for debugging:
+```typescript
+// Add to any component for debugging
+console.log('Environment Check:', {
+  cluster: process.env.NEXT_PUBLIC_CLUSTER,
+  rpcUrl: process.env.NEXT_PUBLIC_RPC_URL,
+  hasShyftKey: !!process.env.NEXT_PUBLIC_SHYFT_API_KEY,
+  hasPinataKeys: !!(process.env.PINATA_API_KEY && process.env.PINATA_SECRET_API_KEY)
+})
+```
+
 ## 📁 Project Structure
 
 ```
 solana-twitter/
 ├── client/                          # Next.js frontend application
+│   ├── .env.example                 # Environment variables template
+│   ├── .env.local                   # Your local environment (create this)
 │   ├── src/
 │   │   ├── app/                     # Next.js 14 app router pages
 │   │   │   ├── admin/               # Admin panel
@@ -153,7 +339,7 @@ solana-twitter/
 │   │   ├── utils/                   # Utility functions
 │   │   │   ├── interfaces.ts        # TypeScript interfaces
 │   │   │   ├── pinata.ts           # IPFS integration
-│   │   │   └── helpers.ts          # Helper functions
+│   │   │   └── helpers.ts          # Helper functions (RPC config)
 │   │   └── styles/                  # Global styles
 │   ├── public/                      # Static assets
 │   └── package.json                 # Frontend dependencies
@@ -212,13 +398,14 @@ We're specifically looking for **UI/UX improvements**! Here are priority areas:
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. **Make your changes**
-4. **Test thoroughly**
-5. **Commit with clear messages**
+3. **Set up environment** (follow instructions above)
+4. **Make your changes**
+5. **Test thoroughly**
+6. **Commit with clear messages**
    ```bash
    git commit -m "feat: add dark mode toggle component"
    ```
-6. **Push and create a Pull Request**
+7. **Push and create a Pull Request**
 
 ### 📝 **Code Standards**
 
@@ -297,20 +484,6 @@ npm run build
 - **Like**: Like relationship
 - **Donation**: Donation record
 
-## 🌍 Environment Setup
-
-### **Development Environment**
-```env
-NEXT_PUBLIC_CLUSTER=devnet
-NEXT_PUBLIC_RPC_URL=https://api.devnet.solana.com
-```
-
-### **Production Environment**
-```env
-NEXT_PUBLIC_CLUSTER=mainnet-beta
-NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
-```
-
 ## 🐛 Known Issues & Improvement Areas
 
 1. **Mobile Menu**: Needs better touch interactions
@@ -326,6 +499,8 @@ NEXT_PUBLIC_RPC_URL=https://api.mainnet-beta.solana.com
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 - [Solana Wallet Adapter](https://github.com/solana-labs/wallet-adapter)
+- [Pinata IPFS Documentation](https://docs.pinata.cloud/)
+- [Shyft RPC Documentation](https://docs.shyft.to/)
 
 ## 🤝 Community
 
@@ -342,6 +517,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Solana Foundation for the amazing blockchain infrastructure
 - Anchor framework for simplifying Solana development
 - Pinata for IPFS storage solutions
+- Shyft for enhanced RPC services
 - The open-source community for inspiration and tools
 
 ---

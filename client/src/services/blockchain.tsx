@@ -9,7 +9,7 @@ import { TwitterPlatform } from "./twitter_platform";
 import idl from "./twitter_platform.json";
 import { getClusterURL } from "@/utils/helpers";
 
-const CLUSTER: string = process.env.NEXT_PUBLIC_CLUSTER || "localhost";
+const CLUSTER: string = process.env.NEXT_PUBLIC_CLUSTER || "devnet";
 const RPC_URL: string = getClusterURL(CLUSTER);
 
 export const getProvider = (

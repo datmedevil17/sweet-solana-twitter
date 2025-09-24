@@ -6,7 +6,7 @@ import UserCard from '@/components/UserCard'
 import TabNavigation from '@/components/TabNavigation'
 import EmptyState from '@/components/EmptyState'
 import React, { useState, useEffect, useMemo } from 'react'
-import { fetchUserFollowers, fetchUserPosts, fetchUserProfile, fetchUserFollows, getProviderReadonly, followUser,unfollowUser, getProvider } from '@/services/blockchain'
+import { fetchUserFollowers, fetchUserPosts, fetchUserProfile, fetchUserFollows, getProviderReadonly, followUser,unfollowUser, getProvider, checkIfLiked } from '@/services/blockchain'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { PublicKey } from '@solana/web3.js'
 import { useParams } from 'next/navigation'
@@ -38,7 +38,7 @@ const ProfilePage = () => {
   )
 
   const isOwnProfile = publicKey?.toBase58() === profileAddress
-  console.log('Is own profile:', isOwnProfile)
+  console.log('Is own profile:', isOwnProfile, publicKey?.toBase58(), profileAddress)
 
   const handleClose = () => {
     setIsOpen(false)
@@ -93,7 +93,7 @@ const ProfilePage = () => {
     try {
       setLoading(true)
       setError(null)
-      
+      console.log('Loading profile data for:', profileAddress)
       // Check if profile address matches current user's public key
       let profileData
       if (isOwnProfile && publicKey) {
@@ -103,7 +103,9 @@ const ProfilePage = () => {
         const targetPublicKey = new PublicKey(profileAddress)
         profileData = await fetchUserProfile(program!, targetPublicKey)
       }
-      
+
+      console.log('Profile data:', profileData)
+
       if (profileData) {
         setUserProfile({
           username: profileData.username,
@@ -121,7 +123,18 @@ const ProfilePage = () => {
           fetchUserFollows(program!, targetPublicKey)
         ])
         
-        setPosts(postsData.map(post => ({
+        let updatedPosts = [];
+        for (const post of postsData) {
+          const isLiked = publicKey ? await checkIfLiked(program!, publicKey, Number(post.account.postId)) : false
+          updatedPosts.push({
+            ...post,
+            isLiked
+          })
+        }
+
+        setPosts(updatedPosts.map(post => {
+
+          return ({
           id: post.account.postId.toString(),
           content: post.account.content,
           timestamp: post.account.createdAt.toNumber(),
@@ -129,7 +142,8 @@ const ProfilePage = () => {
           author: post.account.author.toBase58(),
           imageUrl: post.account.imageUrl || undefined,
           commentsCount: post.account.commentsCount.toNumber(),
-        })))
+          isLiked: post.isLiked || false
+        })}))
         
         setFollowers(followersData.map(follower => ({
           username: follower.account.follower.toBase58(),
@@ -202,14 +216,15 @@ const ProfilePage = () => {
       </div>
     )
   }
+  console.log('Rendering profile page with userProfile:', userProfile)
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       {userProfile && (
         <div className="bg-white shadow-sm border-b">
-          <div className="max-w-4xl mx-auto p-6">
-            <div className="flex justify-between items-center mb-6">
+          <div className="max-w-4xl mx-auto p-6 mt-16">
+            <div className="flex justify-between items-center">
               <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
               {isOwnProfile ? (
                 <button
