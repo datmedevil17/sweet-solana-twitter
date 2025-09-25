@@ -6,6 +6,7 @@ use anchor_lang::prelude::*;
 pub fn create_comment(
     ctx: Context<CreateCommentCtx>,
     post_id: u64,
+    comment_id: u64,
     content: String,
 ) -> Result<()> {
     let comment = &mut ctx.accounts.comment;
@@ -27,12 +28,14 @@ pub fn create_comment(
         return Err(CommentTooLong.into());
     }
 
-    // Increment counters
-    state.comment_count += 1;
-    post.comments_count += 1;
+    
+
+    // Update counters
+    state.comment_count = comment_id;
+    post.comments_count = post.comments_count + 1;
 
     // Initialize comment
-    comment.comment_id = state.comment_count;
+    comment.comment_id = comment_id;
     comment.post_id = post_id;
     comment.author = ctx.accounts.user.key();
     comment.content = content;
@@ -43,23 +46,24 @@ pub fn create_comment(
 }
 
 #[derive(Accounts)]
-#[instruction(post_id: u64)]
+#[instruction(post_id: u64, comment_id: u64)]
 pub struct CreateCommentCtx<'info> {
     #[account(mut)]
     pub program_state: Account<'info, ProgramState>,
-    
+
     #[account(
         init,
         payer = user,
         space = ANCHOR_DISCRIMINATOR_SIZE + Comment::INIT_SPACE,
         seeds = [
             b"comment",
-            (program_state.comment_count + 1).to_le_bytes().as_ref()
+            post_id.to_le_bytes().as_ref(),
+            comment_id.to_le_bytes().as_ref()
         ],
         bump
     )]
     pub comment: Account<'info, Comment>,
-    
+
     #[account(
         mut,
         seeds = [
@@ -69,9 +73,9 @@ pub struct CreateCommentCtx<'info> {
         bump
     )]
     pub post: Account<'info, Post>,
-    
+
     #[account(mut)]
     pub user: Signer<'info>,
-    
+
     pub system_program: Program<'info, System>,
 }

@@ -60,9 +60,10 @@ pub mod twitter_platform {
     pub fn create_comment(
         ctx: Context<CreateCommentCtx>,
         post_id: u64,
+        comment_id: u64,
         content: String,
     ) -> Result<()> {
-        create_comment::create_comment(ctx, post_id, content)
+        create_comment::create_comment(ctx, post_id, comment_id, content)
     }
 
     pub fn donate_to_creator(

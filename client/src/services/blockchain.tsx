@@ -338,31 +338,36 @@ export const createComment = async (
   program: Program<TwitterPlatform>,
   publicKey: PublicKey,
   postId: number,
-  content: string
+  content: string,
 ): Promise<TransactionSignature> => {
   const [programStatePda] = PublicKey.findProgramAddressSync(
     [Buffer.from("program_state")],
     program.programId
   );
 
-  const [postPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("post"), new BN(postId).toArrayLike(Buffer, "le", 8)],
-    program.programId
-  );
 
   // Get current comment count to generate comment PDA
   const programState = await program.account.programState.fetch(
     programStatePda
   );
-  const commentId = programState.commentCount;
+    const nextCommentId = programState.commentCount.toNumber() + 1;
 
   const [commentPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from("comment"), new BN(commentId).toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("comment"), new BN(postId).toArrayLike(Buffer, "le", 8),
+       new BN(nextCommentId).toArrayLike(Buffer, "le", 8)
+    ],
     program.programId
   );
+    const [postPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("post"),
+        new BN(postId).toArrayLike(Buffer, "le", 8)
+      ],
+      program.programId
+    );
 
   const tx = await program.methods
-    .createComment(new BN(postId), content)
+    .createComment(new BN(postId), new BN(nextCommentId), content)
     .accountsPartial({
       programState: programStatePda,
       comment: commentPda,

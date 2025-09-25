@@ -131,7 +131,31 @@
         },
         {
           "name": "comment",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "post_id"
+              },
+              {
+                "kind": "arg",
+                "path": "comment_id"
+              }
+            ]
+          }
         },
         {
           "name": "post",
@@ -167,6 +191,10 @@
       "args": [
         {
           "name": "post_id",
+          "type": "u64"
+        },
+        {
+          "name": "comment_id",
           "type": "u64"
         },
         {

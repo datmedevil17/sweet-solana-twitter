@@ -137,7 +137,31 @@ export type TwitterPlatform = {
         },
         {
           "name": "comment",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "postId"
+              },
+              {
+                "kind": "arg",
+                "path": "commentId"
+              }
+            ]
+          }
         },
         {
           "name": "post",
@@ -173,6 +197,10 @@ export type TwitterPlatform = {
       "args": [
         {
           "name": "postId",
+          "type": "u64"
+        },
+        {
+          "name": "commentId",
           "type": "u64"
         },
         {
