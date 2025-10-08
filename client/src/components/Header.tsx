@@ -16,10 +16,12 @@ export default function Header() {
 
   const { publicKey, sendTransaction, signTransaction } = useWallet()
 
-  const program = useMemo(
-    () => getProvider(publicKey, signTransaction, sendTransaction),
-    [publicKey, signTransaction, sendTransaction]
-  )
+  const program = useMemo(() => {
+    if (!publicKey || !signTransaction || !sendTransaction) {
+      return null
+    }
+    return getProvider(publicKey, signTransaction, sendTransaction)
+  }, [publicKey, signTransaction, sendTransaction])
 
   useEffect(() => {
     setIsMounted(true)
@@ -37,11 +39,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white shadow-lg border-b border-gray-200 fixed w-full top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-200/50 fixed w-full top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="text-2xl font-bold text-green-600 hover:text-green-700 transition-colors">
+            <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent hover:from-green-700 hover:to-blue-700 transition-all duration-300">
               Tweet.sol
             </Link>
 
@@ -49,16 +51,16 @@ export default function Header() {
               <nav className="hidden md:flex items-center space-x-8">
                 <Link
                   href="/feed"
-                  className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50 group"
                 >
-                  <FaHome className="w-4 h-4" />
+                  <FaHome className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                   <span>Feed</span>
                 </Link>
                 <Link
                   href="/profile"
-                  className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50 group"
                 >
-                  <FaUser className="w-4 h-4" />
+                  <FaUser className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                   <span>Profile</span>
                 </Link>
                 
@@ -66,27 +68,39 @@ export default function Header() {
                 <div className="relative">
                   <button
                     onClick={() => setIsCreateDropdownOpen(!isCreateDropdownOpen)}
-                    className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="text-gray-600 hover:text-green-600 flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-green-50 group"
                   >
-                    <FaPlusCircle className="w-4 h-4" />
+                    <FaPlusCircle className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                     <span>Create</span>
-                    <FaChevronDown className="w-3 h-3" />
+                    <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${isCreateDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {isCreateDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                      <div className="py-1">
+                    <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-lg border border-gray-200 rounded-xl shadow-xl z-10 overflow-hidden">
+                      <div className="py-2">
                         <button
                           onClick={handleCreatePost}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-all duration-200 flex items-center space-x-3"
                         >
-                          Create New Post
+                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                            <FaPlusCircle className="w-4 h-4 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium">Create New Post</div>
+                            <div className="text-xs text-gray-500">Share your thoughts</div>
+                          </div>
                         </button>
                         <button
                           onClick={handleStartCollaboration}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-green-600 transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 flex items-center space-x-3"
                         >
-                          Start a Collaboration
+                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <FaPlusCircle className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium">Start a Collaboration</div>
+                            <div className="text-xs text-gray-500">Work together</div>
+                          </div>
                         </button>
                       </div>
                     </div>
@@ -100,14 +114,17 @@ export default function Header() {
               {isMounted && (
                 <WalletMultiButton
                   style={{ 
-                    backgroundColor: '#16a34a', 
+                    background: 'linear-gradient(135deg, #16a34a 0%, #059669 100%)',
                     color: 'white',
-                    borderRadius: '0.5rem',
+                    borderRadius: '12px',
                     border: 'none',
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
+                    padding: '10px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    boxShadow: '0 4px 14px 0 rgba(22, 163, 74, 0.25)',
+                    transition: 'all 0.2s ease-in-out',
                   }}
+                  className="hover:scale-105 hover:shadow-lg transition-all duration-200"
                 />
               )}
             </div>

@@ -14,6 +14,15 @@ import { UserProfile, Post, User } from '@/utils/interfaces'
 import Image from 'next/image'
 
 const ProfilePage = () => {
+  const { publicKey, signTransaction, sendTransaction } = useWallet()
+  const program = useMemo(() => getProviderReadonly(), [])
+  const walletProgram = useMemo(() => {
+    if (!publicKey || !signTransaction || !sendTransaction) {
+      return null
+    }
+    return getProvider(publicKey, signTransaction, sendTransaction)
+  }, [publicKey, signTransaction, sendTransaction])
+
   const params = useParams()
   const profileAddress = params.address as string
   
@@ -28,14 +37,8 @@ const ProfilePage = () => {
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
 
-  const { publicKey, signTransaction, sendTransaction } = useWallet()
   console.log('Current publicKey:', publicKey?.toBase58())
   console.log('Profile address:', profileAddress)
-  const program = useMemo(() => getProviderReadonly(), [])
-  const walletProgram = useMemo(
-    () => getProvider(publicKey, signTransaction, sendTransaction),
-    [publicKey, signTransaction, sendTransaction]
-  )
 
   const isOwnProfile = publicKey?.toBase58() === profileAddress
   console.log('Is own profile:', isOwnProfile, publicKey?.toBase58(), profileAddress)
@@ -90,6 +93,11 @@ const ProfilePage = () => {
   }
 
   const loadProfileData = async () => {
+    if (!program) {
+      setLoading(false)
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -97,11 +105,11 @@ const ProfilePage = () => {
       // Check if profile address matches current user's public key
       let profileData
       if (isOwnProfile && publicKey) {
-        profileData = await fetchUserProfile(program!, publicKey)
+        profileData = await fetchUserProfile(program, publicKey)
       } else {
         // For other users, we need to use the profile address
         const targetPublicKey = new PublicKey(profileAddress)
-        profileData = await fetchUserProfile(program!, targetPublicKey)
+        profileData = await fetchUserProfile(program, targetPublicKey)
       }
 
       console.log('Profile data:', profileData)

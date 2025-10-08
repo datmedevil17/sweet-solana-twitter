@@ -21,10 +21,12 @@ export default function StartCollaborationModal({ isOpen, onClose }: StartCollab
   
   const { publicKey, sendTransaction, signTransaction } = useWallet()
 
-  const program = useMemo(
-    () => getProvider(publicKey, signTransaction, sendTransaction),
-    [publicKey, signTransaction, sendTransaction]
-  )
+  const program = useMemo(() => {
+    if (!publicKey || !signTransaction || !sendTransaction) {
+      return null
+    }
+    return getProvider(publicKey, signTransaction, sendTransaction)
+  }, [publicKey, signTransaction, sendTransaction])
 
   if (!isOpen) return null
 
