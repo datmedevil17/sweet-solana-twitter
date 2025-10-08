@@ -77,15 +77,20 @@ const ProfilePage = () => {
   }
 
   const loadProfileData = async () => {
+    if (!publicKey || !program) {
+      setLoading(false)
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
       
       const [profileData, postsData, followersData, followingData] = await Promise.all([
-        fetchUserProfile(program!, publicKey!),
-        fetchUserPosts(program!, publicKey!),
-        fetchUserFollowers(program!, publicKey!),
-        fetchUserFollows(program!, publicKey!)
+        fetchUserProfile(program, publicKey),
+        fetchUserPosts(program, publicKey),
+        fetchUserFollowers(program, publicKey),
+        fetchUserFollows(program, publicKey)
       ])
       
       if (profileData) {
@@ -131,9 +136,10 @@ const ProfilePage = () => {
   }
 
   useEffect(() => {
-    loadProfileData()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (publicKey && program) {
+      loadProfileData()
+    }
+  }, [publicKey, program])
 
   const tabs = [
     { key: 'posts', label: 'posts', count: posts.length },

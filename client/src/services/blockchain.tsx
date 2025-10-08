@@ -10,26 +10,54 @@ import idl from "./twitter_platform.json";
 import { getClusterURL } from "@/utils/helpers";
 
 const CLUSTER: string = process.env.NEXT_PUBLIC_CLUSTER || "devnet";
-const RPC_URL: string = getClusterURL(CLUSTER);
+const RPC_URL: string = process.env.NEXT_PUBLIC_RPC_URL || getClusterURL(CLUSTER);
+
+// Test connection to RPC endpoint
+export const testConnection = async (): Promise<boolean> => {
+  try {
+    const connection = new Connection(RPC_URL, "confirmed");
+    const version = await connection.getVersion();
+    console.log("Connected to Solana cluster:", CLUSTER, "Version:", version);
+    return true;
+  } catch (error) {
+    console.error("Failed to connect to Solana cluster:", error);
+    return false;
+  }
+};
 
 export const getProvider = (
   publicKey: PublicKey | null,
   signTransaction: unknown,
   sendTransaction: unknown
 ): Program<TwitterPlatform> | null => {
-  if (!publicKey || !signTransaction) {
-    console.log("Wallet not connected or missing signTransaction");
+  if (!publicKey) {
+    // Only log if we had a previous connection
+    return null;
+  }
+  
+  if (!signTransaction) {
+    console.log("Wallet missing signTransaction method");
     return null;
   }
 
-  const connection = new Connection(RPC_URL, "confirmed");
-  const provider = new AnchorProvider(
-    connection,
-    { publicKey, signTransaction, sendTransaction } as unknown as Wallet,
-    { commitment: "processed" }
-  );
+  if (!sendTransaction) {
+    console.log("Wallet missing sendTransaction method");
+    return null;
+  }
 
-  return new Program<TwitterPlatform>(idl as TwitterPlatform, provider);
+  try {
+    const connection = new Connection(RPC_URL, "confirmed");
+    const provider = new AnchorProvider(
+      connection,
+      { publicKey, signTransaction, sendTransaction } as unknown as Wallet,
+      { commitment: "processed" }
+    );
+
+    return new Program<TwitterPlatform>(idl as TwitterPlatform, provider);
+  } catch (error) {
+    console.error("Failed to create provider:", error);
+    return null;
+  }
 };
 
 export const getProviderReadonly = (): Program<TwitterPlatform> => {
@@ -545,8 +573,13 @@ export const donateToCreator = async (
 // Fetch functions for reading data
 export const fetchUserProfile = async (
   program: Program<TwitterPlatform>,
-  userPublicKey: PublicKey
+  userPublicKey: PublicKey | null
 ) => {
+  if (!userPublicKey) {
+    console.error("userPublicKey is null, cannot fetch user profile");
+    return null;
+  }
+
   const [userProfilePda] = PublicKey.findProgramAddressSync(
     [Buffer.from("user_profile"), userPublicKey.toBuffer()],
     program.programId
